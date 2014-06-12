@@ -1,17 +1,68 @@
+/* 
+Heath Henley 
+University of Rhode Island
+2014
+
+Two dimensional near neighbor interacting lattice gas simulation
+
+*/ 
 #include<stdlib.h>
 #include<time.h>
 #include<iostream>
 #include<fstream>
 #include<vector> 
 using namespace std; 
+
+// k 
+const double k = 1.3806488e-23;
+
+// interaction energy
+const double EPS =  -(1.3806488e-23*350);
+
+// global, temp and beta
+double T = 273.0;
+double BETA = 1/(k*T);
+
 /* 
-Heath Henley 
-University of Rhode Island
-2014
+Calculate energy of a given configuration
+*/
+void getEnergy(int dx, int dy, int M, double &E, vector<int> mol_x, vector<int> mol_y)
+{
+	E = 0.0;
+	int x_ref,x;
+	int y_ref,y;
+	for(int i = 0; i < M-1; i++)
+	{
+		// position of reference molecule
+		x_ref = mol_x[i];
+		y_ref = mol_y[i];
+		
+		// loop through other molecules in system
+		for(int j = i+1; j < M; j++)
+		{
+			x = mol_x[j];
+			y = mol_y[j];
 
-Two dimensional non interacting lattice gas simulation
+			int rx = abs(x-x_ref);
+			int ry = abs(y-y_ref);
 
-*/ 
+			// both away from boundary
+			if (rx < (dx-1) && ry < (dy-1) ) 
+			{
+				if ( rx == 1 && ry == 0 || ry == 1 && rx == 0 ) E += EPS;
+			} 
+			else if ( rx-(dx-1) == 0 && y_ref == y )// both on x boundary
+			{
+				E += EPS;
+			} 
+			else if (ry-(dy-1) == 0 && x_ref == x )// both on y boundary
+			{
+				E += EPS;
+			}
+		}
+	}
+}		
+
 void getUserInput(int &dx, int &dy, int &N, int &M, int &Nsteps) 
 {
 // Get all input from user 
@@ -83,8 +134,11 @@ void performMove(int M, int dx, int dy, vector< vector<int> > &lattice,
 										vector<int> &mols_y, 
 										vector<int> &dx_mol, 
 										vector<int> &dy_mol, 
-										int & count_accepted) 
+										int & count_accepted,
+										double &E) 
 {
+	// local energy variables
+	double Eold, Enew;
 	// pick random molecule 
 	int choose_mol = rand() % M; 
 	// pick random direction { -x, +x, -y, +y } 
@@ -124,34 +178,56 @@ void performMove(int M, int dx, int dy, vector< vector<int> > &lattice,
 	//cout << "Trying to move molecule at {x, y}: {" << old_pos_x <<", "<<old_pos_y<<"}"<<endl;
 	//cout << "to coordinates: {" << new_pos_x <<", "<<new_pos_y<<"}"<<endl;
 
+	// calculate energy of current configuration
+	getEnergy(dx, dy, M, Eold, mols_x, mols_y);
+
+	E = Eold;
+
 	// trial position has been found, check to see if it is empty 
 	// before accepting move 
 	if ( lattice[new_pos_x][new_pos_y] == 0 ) 
 	{
-		// new lattice site is empty, accept move 
+
 		lattice[old_pos_x][old_pos_y] = 0; 
 		lattice[new_pos_x][new_pos_y] = 1; 
 		mols_x [ choose_mol ] = new_pos_x; 
 		mols_y [ choose_mol ] = new_pos_y; 
 
-		// move is accepted, increment the correct displacement counter
-		if ( choose_direction == 0 )
+		// calculate energy of new configuration
+		getEnergy(dx, dy, M, Enew, mols_x, mols_y);
+
+		double test_rand = (double)rand()/RAND_MAX;
+
+		// accept move if energy is lowered or exp(-beta*dE) > rand()
+		if ( (Enew < Eold) || exp(-BETA*(Enew-Eold)) > test_rand )
 		{
-			dx_mol[choose_mol] -= 1; 
+			E = Enew;
+			// move is accepted, increment the correct displacement counter
+			if ( choose_direction == 0 )
+			{
+				dx_mol[choose_mol] -= 1; 
+			}
+			else if ( choose_direction ==1)
+			{
+				dx_mol[choose_mol] += 1; 
+			}
+			else if ( choose_direction ==2)
+			{
+				dy_mol[choose_mol] -= 1; 
+			}
+			else if ( choose_direction ==3)
+			{
+				dy_mol[choose_mol] += 1; 
+			}
+			count_accepted ++;
 		}
-		else if ( choose_direction ==1)
+		else // reject move, reset configuration
 		{
-			dx_mol[choose_mol] += 1; 
+			lattice[old_pos_x][old_pos_y] = 1; 
+			lattice[new_pos_x][new_pos_y] = 0; 
+			mols_x [ choose_mol ] = old_pos_x; 
+			mols_y [ choose_mol ] = old_pos_y;
 		}
-		else if ( choose_direction ==2)
-		{
-			dy_mol[choose_mol] -= 1; 
-		}
-		else if ( choose_direction ==3)
-		{
-			dy_mol[choose_mol] += 1; 
-		}
-		count_accepted ++; 
 	}
 
 }
@@ -165,26 +241,31 @@ void getMeanDisplacement(int M,  vector<int> dx_mol, vector<int> dy_mol, double 
 	}
 	r2 = (r2/M);
 }
-
 /* 
 Main entry point for program
 */ 
 int main()
 {
 // constants and required variables
-	int dx, dy, N, M, Nsteps, accepted = 0, Ntrials;
-	double r2 = 0.0; 
-	bool print_the_lattice = false;
+	int dx, dy, N, M, Nsteps, accepted = 0, Ntrials, equil, prod;
+	double r2 = 0.0, E = 0.0;  
+	bool print_the_lattice =false;
 
 // ouput file 
-	fstream fout("r_vs_nstep.txt",ios::out); 
+	fstream fout("out.txt",ios::out); 
 
 // initialize random seed
 	srand(time(NULL));
 
 // Get all input from user 
 	//getUserInput( dx, dy, N, M, Nsteps);
-	dx = 10; dy  = 10; N = dx*dy; M = 90, Nsteps = 100, Ntrials = 50;
+	equil = 2000; 
+	prod  = 10000;
+	dx = 10; dy  = 10;
+	N = dx*dy; 
+	M = 50; 
+	Nsteps = equil+prod; 
+	Ntrials = 4;
 
 // Coverage = M/N; 
 	double theta = (double)M/N;
@@ -199,17 +280,18 @@ int main()
 // 1D vectors constaing overall displacements in each direction
 	vector<int> dx_mol(M), dy_mol(M);  
 
-while (Nsteps < 10000)
+
+while (T < 400.0)
 {
 	double ens_sum_r2 = 0.0;
 	double ens_sum_r2_sqr = 0.0;
-
-	cout << "Nsteps = " << Nsteps << endl;
+	double ens_sum_E = 0.0;
+	double ens_sum_E2 = 0.0; 
 
 	for ( int j = 0; j < Ntrials; j++)
 	{
-			cout << "\tTrial " <<j<< " of " << Ntrials <<endl;
-
+			cout <<endl << "Begin Trial " <<j<< " of " << Ntrials <<endl;
+			cout << "Nstep \t Energy/part (K)" <<endl;
 		// place M molecules randomly on lattice
 			initLattice(M, dx, dy, lattice, mols_x, mols_y, dx_mol, dy_mol);
 	
@@ -217,34 +299,66 @@ while (Nsteps < 10000)
 			if (print_the_lattice) printLattice(dx, dy, lattice); 
 
 		// main mc loop 
-			double sum_r2 = 0.0;
+			double sum_r2 = 0.0, sum_E = 0.0;
 			for ( int i = 0; i < Nsteps; i++)
 			{
+
+				if ( i == equil)
+				{
+					cout << "Switch to production mode ... "  << endl;
+					sum_r2 = 0.0; 
+					sum_E = 0.0; 
+				}
+
 				// attempt move 
-				performMove(M, dx, dy, lattice, mols_x, mols_y, dx_mol, dy_mol, accepted);
-		
+				performMove(M, dx, dy, lattice, mols_x, mols_y, dx_mol, dy_mol, accepted,E);
+
 				// print to debug
 				if (print_the_lattice) printLattice(dx, dy, lattice);
 
 				// get  mean displacement / molecules
 				getMeanDisplacement(M,  dx_mol, dy_mol, r2); 
-				sum_r2 += r2; 
+				sum_r2 += r2;
+
+				// get and sum energy
+				getEnergy( dx, dy, M, E, mols_x, mols_y);
+				sum_E += E/k;
+
+				if ( i % 2000 == 0 ) 
+				{
+					cout << i << "\t" << E/(M*k) << endl;
+				}
 
 			}
-
-			double r2_av = sum_r2/Nsteps;
+			// mean square displacement
+			double r2_av = sum_r2/prod;
 			ens_sum_r2 += r2_av;
 			ens_sum_r2_sqr += r2_av*r2_av;
-	} // for j ... Ntrials
+			//energy
+			double E_av = sum_E/(prod*M);
+			ens_sum_E +=  E_av;
+			ens_sum_E2 += E_av*E_av;
 
+
+	} // for j ... Ntrials
+	// mean square displacement 
     double ens_av_r2 = (ens_sum_r2/Ntrials);
 	double ens_av_r2_sqr = ens_sum_r2_sqr/Ntrials;
 	double ens_std = sqrt(ens_av_r2_sqr-ens_av_r2*ens_av_r2)/(Ntrials-1);
-	cout << "Mean square displacement = " << ens_av_r2 << ",\tStan. Dev = "<<ens_std<< ",\tSteps = "<<Nsteps <<endl;
+	// energy 
+	double E_tot_av = ens_sum_E/Ntrials;
+	double E2_tot_av = ens_sum_E2/Ntrials;
+	double std_E = sqrt(E2_tot_av-E_tot_av*E_tot_av)/(Ntrials-1);
 
-	fout <<  ens_av_r2 << "\t "<<ens_std<< "\t"<<Nsteps <<endl;
+	
+	cout <<endl<< "Final Results for " << Ntrials << " trials:" << endl;
+	cout << Nsteps << "\t"<<theta<< "\t" << T <<"\t"<< ens_av_r2 << "\t "<<ens_std<< "\t " << E_tot_av << "\t " << std_E << endl;
 
-	Nsteps += 1000;
-}//nstep loop
+	fout << Nsteps << "\t"<<theta << "\t" <<T <<"\t"<< ens_av_r2 << "\t "<<ens_std<< "\t " << E_tot_av << "\t " << std_E << endl;
+
+	T += 30;
+	BETA = 1.0/(k*T); 
+ }//T loop
+
 	return 0 ; 
 }
