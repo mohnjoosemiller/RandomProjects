@@ -171,15 +171,20 @@ Main entry point for program
 */ 
 int main()
 {
+// constants and required variables
 	int dx, dy, N, M, Nsteps, accepted = 0, Ntrials;
 	double r2 = 0.0; 
 	bool print_the_lattice = false;
-	fstream fout("r_vs_nstep.txt",ios::out); // output file 
+
+// ouput file 
+	fstream fout("r_vs_nstep.txt",ios::out); 
+
+// initialize random seed
 	srand(time(NULL));
 
 // Get all input from user 
 	//getUserInput( dx, dy, N, M, Nsteps);
-	dx = 10; dy  = 10; N = dx*dy; M = 10, Nsteps = 100, Ntrials = 50;
+	dx = 10; dy  = 10; N = dx*dy; M = 90, Nsteps = 100, Ntrials = 50;
 
 // Coverage = M/N; 
 	double theta = (double)M/N;
@@ -193,12 +198,18 @@ int main()
 
 // 1D vectors constaing overall displacements in each direction
 	vector<int> dx_mol(M), dy_mol(M);  
+
 while (Nsteps < 10000)
 {
 	double ens_sum_r2 = 0.0;
 	double ens_sum_r2_sqr = 0.0;
+
+	cout << "Nsteps = " << Nsteps << endl;
+
 	for ( int j = 0; j < Ntrials; j++)
 	{
+			cout << "\tTrial " <<j<< " of " << Ntrials <<endl;
+
 		// place M molecules randomly on lattice
 			initLattice(M, dx, dy, lattice, mols_x, mols_y, dx_mol, dy_mol);
 	
