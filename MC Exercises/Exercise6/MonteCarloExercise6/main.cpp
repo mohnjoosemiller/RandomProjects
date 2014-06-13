@@ -7,6 +7,7 @@ Two dimensional near neighbor interacting lattice gas simulation
 
 */ 
 #include<stdlib.h>
+#include<string>
 #include<time.h>
 #include<iostream>
 #include<fstream>
@@ -17,11 +18,21 @@ using namespace std;
 const double k = 1.3806488e-23;
 
 // interaction energy
-const double EPS =  -(1.3806488e-23*350);
+const double EPS =  -(1.3806488e-23*1000);
 
 // global, temp and beta
 double T = 273.0;
 double BETA = 1/(k*T);
+/*
+Add frame to movie 
+*/ 
+void makeMovie(int M, vector<int> mols_x, vector<int> mols_y, fstream &movie)
+{
+	movie << M << endl<<endl;
+	for ( int i = 0; i < M ; i++)
+		movie << "H\t"<<mols_x[i] << "\t" << mols_y[i] << "\t" << 0.0<< endl;
+}
+
 
 /* 
 Calculate energy of a given configuration
@@ -247,12 +258,16 @@ Main entry point for program
 int main()
 {
 // constants and required variables
-	int dx, dy, N, M, Nsteps, accepted = 0, Ntrials, equil, prod;
+	int dx, dy, N, M, Nsteps, accepted = 0, Ntrials, equil, prod, movieFreq;
 	double r2 = 0.0, E = 0.0;  
 	bool print_the_lattice =false;
 
 // ouput file 
 	fstream fout("out.txt",ios::out); 
+
+// movie file 
+	fstream movie;
+	string movie_file;
 
 // initialize random seed
 	srand(time(NULL));
@@ -266,6 +281,7 @@ int main()
 	M = 50; 
 	Nsteps = equil+prod; 
 	Ntrials = 4;
+	movieFreq = 10;
 
 // Coverage = M/N; 
 	double theta = (double)M/N;
@@ -281,8 +297,8 @@ int main()
 	vector<int> dx_mol(M), dy_mol(M);  
 
 
-while (T < 400.0)
-{
+//while (T < 400.0)
+//{
 	double ens_sum_r2 = 0.0;
 	double ens_sum_r2_sqr = 0.0;
 	double ens_sum_E = 0.0;
@@ -290,8 +306,12 @@ while (T < 400.0)
 
 	for ( int j = 0; j < Ntrials; j++)
 	{
+			movie_file = "movie_set" + to_string((long long int)j) + ".xyz" ;
+			movie.open(movie_file, ios::out);
+
 			cout <<endl << "Begin Trial " <<j<< " of " << Ntrials <<endl;
 			cout << "Nstep \t Energy/part (K)" <<endl;
+
 		// place M molecules randomly on lattice
 			initLattice(M, dx, dy, lattice, mols_x, mols_y, dx_mol, dy_mol);
 	
@@ -328,8 +348,11 @@ while (T < 400.0)
 				{
 					cout << i << "\t" << E/(M*k) << endl;
 				}
+				if ( i % movieFreq == 0 ) 
+					makeMovie(M, mols_x, mols_y, movie);
 
 			}
+			movie.close();
 			// mean square displacement
 			double r2_av = sum_r2/prod;
 			ens_sum_r2 += r2_av;
@@ -356,9 +379,9 @@ while (T < 400.0)
 
 	fout << Nsteps << "\t"<<theta << "\t" <<T <<"\t"<< ens_av_r2 << "\t "<<ens_std<< "\t " << E_tot_av << "\t " << std_E << endl;
 
-	T += 30;
-	BETA = 1.0/(k*T); 
- }//T loop
+	//T += 30;
+	//BETA = 1.0/(k*T); 
+// }//T loop
 
 	return 0 ; 
 }
