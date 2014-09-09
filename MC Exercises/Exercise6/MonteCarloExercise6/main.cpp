@@ -42,6 +42,7 @@ void getEnergy(int dx, int dy, int M, double &E, vector<int> mol_x, vector<int> 
 	E = 0.0;
 	int x_ref,x;
 	int y_ref,y;
+
 	for(int i = 0; i < M-1; i++)
 	{
 		// position of reference molecule

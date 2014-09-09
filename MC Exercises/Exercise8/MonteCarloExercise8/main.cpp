@@ -29,10 +29,13 @@ void moveMolecule(Molecule &mol, double delta, int step, int &accepted)
 
 	double x_r = mol.position_r;
 	double x_new_r = mol.position_r + (random-0.5)*delta;
+
 	//calculate energy - old
 	double U = getEnergy(mol);
+
 	//calculate energy - new 
 	mol.position_r = x_new_r;
+
 	double U_new = getEnergy(mol);
 
 	if ( x_new_r < 3.0)
@@ -52,11 +55,13 @@ void moveMolecule(Molecule &mol, double delta, int step, int &accepted)
 
 void main () 
 {
+	// initialize random number seed 
 	srand(time(NULL));
-	int Ntrials = 4, prod = 5e6 , equil = 1e6;
+	// constants
+	int Ntrials = 4, prod = 5e6 , equil = 50e6;
 	int Nsteps = prod + equil;
-	double T = 473.15;
-	double beta = 1.0/(K*T), eps = 10, sig = 1;
+	double T = 573.15;
+	double beta = 1.0/(K*T), eps = 1, sig = 1;
 	double delta = 1;
 	int accepted = 0; 
 	double Usum = 0.0;
@@ -67,6 +72,7 @@ void main ()
 	for ( int i = 0; i < Ntrials; i++)
 	{
 		Usum = 0.0; accepted = 0; delta = 1;
+
 		mol.initialize(eps, sig, sig, beta);
 
 		cout << endl << "Set " << i+1 << " of " << Ntrials << endl; 
@@ -81,12 +87,13 @@ void main ()
 
 			if ( j < equil ) 
 			{
-				if ( j % 100 == 0 ) 
+				if ( j % 100 == 0  && j > 0) 
 				{
 					if ( ((double)accepted / j) < 0.5 )
 						delta = delta * 0.95 ;
 					else 
 						delta = delta * 1.05 ;
+					//cout << "accepted / j = " <<(double)accepted / j << endl;
 				}
 			}
 			if ( j == equil) 
