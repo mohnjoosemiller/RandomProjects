@@ -26,7 +26,7 @@ void EquationOfState::solveCubicEOS(double c0, double c1, double c2, double c3, 
 		count++;
 	}
 	// found one root 
-	cout << count << "\t" << Z_new <<"\t" << eps << endl;
+	//cout << count << "\t" << Z_new <<"\t" << eps << endl;
 	
 	// coefficients of defalted quatratic equation
 	double a = c0; 

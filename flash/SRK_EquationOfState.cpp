@@ -60,7 +60,9 @@ void SRK_EquationOfState::computeDensity(vector<double> zc, ComponentData *p, do
 
 	solveCubicEOS(c0,c1,c2,c3, phase_id, &Zreturn);
 
-	cout << Zreturn<<  endl; 
+	double density  = Pres/(Zreturn*R*Temp);
+
+	(*den)[phase_id] = density*AMW;
 
 
 };

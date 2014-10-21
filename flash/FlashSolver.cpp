@@ -24,14 +24,16 @@ int FlashSolver::solveFlash(double pres, double temp, vector<double> zc)
 	int ret = 0; 
 	pressure = pres; 
 	temperature = temp;
+	vector<double> den(2);
 
 	ret = setEOS(SRK_EOS); 
 
 	if ( ret >= 0 ) 
 	{
-		int ip = 1; 
-		vector<double> den(1,0.0); 
+		int ip = 1; //  vap = 0, liq = 1
+		
 		pEos->computeDensity(zc, pCompData, pres, temp,ip, &den); 
+
 	}
 	else 
 		return ret;
