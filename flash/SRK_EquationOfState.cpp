@@ -58,6 +58,7 @@ void SRK_EquationOfState::computeDensity(vector<double> zc, ComponentData *p, do
 	// update mix parameters 
 	computeMixParameters(zc, p, Pres, Temp);
 
+	// solve cubic
 	solveCubicEOS(c0,c1,c2,c3, phase_id, &Zreturn);
 
 	double density  = Pres/(Zreturn*R*Temp);
@@ -70,6 +71,14 @@ void SRK_EquationOfState::computeDensity(vector<double> zc, ComponentData *p, do
 
 void SRK_EquationOfState::computeFugacity(vector<double> zc, ComponentData *p, double Pres, double Temp, int phase_id, vector<double> *fug)
 {
+
+	double Zreturn = 0.0; 
+
+	// update mix parameters 
+	computeMixParameters(zc, p, Pres, Temp);
+	
+	// solve cubic
+	solveCubicEOS(c0,c1,c2,c3, phase_id, &Zreturn);
 
 
 };

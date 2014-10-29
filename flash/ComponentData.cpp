@@ -1,19 +1,23 @@
 #include "ComponentData.h"
 
-#define NC_MAX 3
+#define NC_MAX 5
 
 // data is not correct yet, but dummied in to debug
 // critical temperature in K 
 double tc_lib[NC_MAX] = {
 	0.0, 
-	647.15 , 
-	304.1 };
-
+	647.37 , // water 
+	304.20 , // co2
+	425.18 ,// butane
+	507.43 //hexane
+};
 // critical pressure in bar 
 double pc_lib[NC_MAX] = {
 	0.0, 
-	200, 
-	73 };
+	221.20, 
+	73.80,
+	37.97,
+	30.12};
 
 // critical volume in cm3/mol 
 double vc_lib[NC_MAX] = {
@@ -25,19 +29,23 @@ double vc_lib[NC_MAX] = {
 double zc_lib[NC_MAX] = {
 	0.0, 
 	0.27, 
-	0.27 };
+	0.233 };
 
 // accentric factor 
 double omega_lib[NC_MAX] = {
 	0.0, 
-	0.244, 
-	0.244 };
+	0.345, 
+	0.244,
+	0.200,
+	0.301};
 
 // molecular weight
 double mw_lib[NC_MAX] = {
 	0.0, 
 	18.0145, 
-	44.01 };
+	44.01,
+	58.12,
+	86.18};
 
 
 
@@ -47,7 +55,7 @@ ComponentData::ComponentData(int nc)
 	// read data ( this should be input from a file eventually 
 	//int nc = 2; 
 	vector<int> ids(nc);
-	ids[0] = 1; ids[1] =2; 
+	ids[0] = 3; ids[1] =4; 
 
 	// set nc 
 	NC = nc; 

@@ -9,7 +9,7 @@ int main ()
 	double pressure = 1.0 ; 
 	double temperature = 300.0; 
 	vector<double> zc(nc); 
-	zc[0] = 0.9; 
+	zc[0] = 0.2; 
 	zc[1] = 1.0 - zc[0];
 
 	// set up solver ( read input, etc ) 
