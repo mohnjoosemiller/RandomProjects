@@ -27,11 +27,14 @@ int FlashSolver::solveFlash(double pres, double temp, vector<double> zc)
 	pressure = pres; 
 	temperature = temp;
 	
-	vector<double> k(nc), xi(2*nc);
+	vector<double> k(nc), xi(2*nc), fug(nc);
 
 	double beta = 0.5;
 
 	ret = setEOS(SRK_EOS); 
+
+
+	pEos->computeFugacity(zc, pCompData, pressure, temperature, 0 , &fug);
 
 	if ( ret >= 0 ) 
 	{

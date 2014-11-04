@@ -8,13 +8,14 @@ public:
 	ComponentData(int nc);
 	~ComponentData(void);
 	vector<int> compID;
-	vector<int> compTc;
-	vector<int> compPc;
-	vector<int> compVc;
-	vector<int> compZc;
-	vector<int> compOmega;
-	vector<int> compMW;
-	vector<int> compbi;
+	vector<double> compTc;
+	vector<double> compPc;
+	vector<double> compVc;
+	vector<double> compZc;
+	vector<double> compOmega;
+	vector<double> compMW;
+	vector<double> compbi;
+	vector<double> compai;
 
 	int NC;
 private:

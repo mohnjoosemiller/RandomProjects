@@ -80,6 +80,7 @@ void ComponentData::initializeDataMembers()
 	compMW.resize(NC);
 	compbi.resize(NC); 
 	compOmega.resize(NC); 
+	compai.resize(NC); 
 }
 
 ComponentData::~ComponentData(void)

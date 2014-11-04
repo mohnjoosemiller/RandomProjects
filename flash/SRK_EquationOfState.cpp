@@ -29,6 +29,8 @@ void SRK_EquationOfState::computeMixParameters(vector<double> zc, ComponentData 
 			            0.15613*(pComp->compOmega[i])*(pComp->compOmega[i]))*
 						(1-sqrt(Temp/(pComp->compTc[i]))));
 		alpha[i] *= alpha[i];
+
+		pComp->compai[i] = alpha[i]*a[i];
 	}
 
 	for ( int i = 0; i < nc; i++)
@@ -80,6 +82,30 @@ void SRK_EquationOfState::computeFugacity(vector<double> zc, ComponentData *p, d
 	// solve cubic
 	solveCubicEOS(c0,c1,c2,c3, phase_id, &Zreturn);
 
+	// get dimensioned mix parameters 
+	double bm = EOS_B_mix*R*Temp/Pres;
+	double am = EOS_A_mix*R*R*Temp*Temp/Pres;
+
+	// temporary storage
+	double term1=0; double term2 = 0; 
+	vector<double> lnphi(p->NC);
+	
+	// compute mixture fugacity coefficients
+	for ( int i = 0; i <p->NC; i++)
+	{
+		// compute "a sum" term 
+		double sum_a = 0.0; 
+		for ( int j = 0; j < p->NC; j++ )
+			sum_a +=zc[j]*sqrt(p->compai[i] * p->compai[j]); 
+
+		term1 = ((p->compbi[i])/bm)*(Zreturn-1)-log(Zreturn-EOS_B_mix);
+		term2 = -(EOS_A_mix/EOS_B_mix )*(2*sum_a/am -(p->compbi[i])/bm)*log((Zreturn+EOS_B_mix)/Zreturn); 
+
+		lnphi[i] = term1 + term2;
+
+		// compute fugacity 
+		(*fug)[i] = exp(lnphi[i])*zc[i]*Pres;
+	} 
 
 };
 
